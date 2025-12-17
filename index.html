@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Slides with Code | Claude Method</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #050505;
+            --bg-secondary: #0a0a0a;
+            --bg-tertiary: #111111;
+            --text-primary: #ffffff;
+            --text-secondary: #888888;
+            --text-muted: #555555;
+            --accent: #00d4ff;
+            --accent-glow: rgba(0, 212, 255, 0.3);
+            --accent-subtle: rgba(0, 212, 255, 0.1);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+        
+        /* Chapter Navigation */
+        .chapter-nav {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 240px;
+            background: linear-gradient(135deg, rgba(10,10,10,0.95) 0%, rgba(5,5,5,0.98) 100%);
+            border-right: 1px solid rgba(255,255,255,0.05);
+            padding: 30px 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chapter-nav-title {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            padding: 0 24px;
+            margin-bottom: 20px;
+        }
+        
+        .chapter-list {
+            list-style: none;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .chapter-item {
+            padding: 12px 24px;
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .chapter-item:hover {
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .chapter-item.active {
+            color: var(--accent);
+            border-left-color: var(--accent);
+            background: var(--accent-subtle);
+        }
+        
+        .chapter-number {
+            font-size: 10px;
+            font-weight: 600;
+            opacity: 0.5;
+            min-width: 18px;
+        }
+        
+        /* Slide Counter */
+        .slide-counter {
+            position: fixed;
+            top: 30px;
+            right: 40px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            z-index: 100;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .slide-counter .current {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        /* Main Content Area */
+        .slides-container {
+            margin-left: 240px;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 100px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateX(30px);
+        }
+        
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+        
+        /* Typography */
+        .slide-eyebrow {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--accent);
+            margin-bottom: 20px;
+        }
+        
+        .slide-title {
+            font-size: 64px;
+            font-weight: 700;
+            line-height: 1.1;
+            text-align: center;
+            max-width: 900px;
+            margin-bottom: 30px;
+        }
+        
+        .slide-title .accent {
+            color: var(--accent);
+        }
+        
+        .slide-subtitle {
+            font-size: 24px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            text-align: center;
+            max-width: 700px;
+        }
+        
+        .big-number {
+            font-size: 200px;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+            text-shadow: 0 0 100px var(--accent-glow);
+        }
+        
+        .big-number-label {
+            font-size: 28px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            margin-top: 20px;
+        }
+        
+        /* Visual Elements */
+        .comparison-container {
+            display: flex;
+            gap: 80px;
+            align-items: center;
+        }
+        
+        .comparison-item {
+            text-align: center;
+        }
+        
+        .comparison-icon {
+            width: 120px;
+            height: 120px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            font-size: 48px;
+        }
+        
+        .comparison-icon.dimmed {
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(255,255,255,0.1);
+            opacity: 0.4;
+        }
+        
+        .comparison-icon.highlighted {
+            background: var(--accent-subtle);
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 60px var(--accent-glow);
+        }
+        
+        .comparison-label {
+            font-size: 20px;
+            font-weight: 500;
+        }
+        
+        .comparison-label.dimmed {
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+        
+        .comparison-label.highlighted {
+            color: var(--accent);
+        }
+        
+        .vs-divider {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        
+        /* Reason Cards */
+        .reasons-container {
+            display: flex;
+            gap: 40px;
+            margin-top: 40px;
+        }
+        
+        .reason-card {
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 40px;
+            width: 320px;
+            text-align: left;
+        }
+        
+        .reason-number {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+        
+        .reason-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .reason-desc {
+            font-size: 16px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        /* Step Indicator */
+        .step-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--accent-subtle);
+            border: 1px solid var(--accent);
+            border-radius: 50px;
+            padding: 12px 28px;
+            margin-bottom: 40px;
+        }
+        
+        .step-badge-number {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        .step-badge-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        /* Video Embed Placeholder */
+        .video-placeholder {
+            background: var(--bg-tertiary);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            width: 640px;
+            height: 360px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .video-placeholder::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--accent-subtle) 0%, transparent 50%);
+        }
+        
+        .play-button {
+            width: 80px;
+            height: 80px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 60px var(--accent-glow);
+            z-index: 1;
+        }
+        
+        .play-button::after {
+            content: '';
+            width: 0;
+            height: 0;
+            border-left: 24px solid var(--bg-primary);
+            border-top: 14px solid transparent;
+            border-bottom: 14px solid transparent;
+            margin-left: 6px;
+        }
+        
+        .video-label {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-top: 24px;
+            z-index: 1;
+        }
+        
+        /* System Prompt Slide */
+        .prompt-container {
+            background: var(--bg-secondary);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 50px 50px 40px 50px;
+            max-width: 1100px;
+            max-height: 65vh;
+            overflow-y: auto;
+            overflow-x: visible;
+            text-align: left;
+            position: relative;
+            margin-top: 40px;
+        }
+        
+        .prompt-container::before {
+            content: none;
+        }
+
+        .prompt-label {
+            display: inline-block;
+            background: var(--bg-primary);
+            padding: 6px 18px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: var(--accent);
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 24px;
+        }
+        
+        .prompt-section {
+            margin-bottom: 28px;
+        }
+        
+        .prompt-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .prompt-text {
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--text-secondary);
+        }
+        
+        .prompt-text strong {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .prompt-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .prompt-list li {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        .prompt-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            opacity: 0.6;
+        }
+        
+        /* Model Selection */
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 50px;
+            max-width: 1000px;
+        }
+        
+        .model-card {
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: left;
+        }
+        
+        .model-card.recommended {
+            border-color: var(--accent);
+            background: var(--accent-subtle);
+        }
+        
+        .model-card-header {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        
+        .model-card.recommended .model-card-header {
+            color: var(--accent);
+        }
+        
+        .model-card-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .model-card-desc {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        /* Tool Comparison */
+        .tools-container {
+            display: flex;
+            gap: 50px;
+            margin-top: 50px;
+        }
+        
+        .tool-card {
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 40px;
+            width: 340px;
+            text-align: center;
+        }
+        
+        .tool-card.primary {
+            border-color: var(--accent);
+            box-shadow: 0 0 60px var(--accent-glow);
+        }
+        
+        .tool-icon {
+            width: 72px;
+            height: 72px;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+        
+        .tool-card.primary .tool-icon {
+            background: var(--accent-subtle);
+            border: 1px solid var(--accent);
+        }
+        
+        .tool-name {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .tool-desc {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        .tool-tag {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 8px 16px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* GitHub Steps */
+        .github-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 40px;
+            max-width: 600px;
+        }
+        
+        .github-step {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 28px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .github-step-num {
+            width: 36px;
+            height: 36px;
+            background: var(--accent-subtle);
+            border: 1px solid var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+        
+        .github-step-text {
+            font-size: 17px;
+            font-weight: 400;
+        }
+        
+        .github-step-text code {
+            background: var(--bg-secondary);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-family: 'SF Mono', Consolas, monospace;
+            font-size: 14px;
+            color: var(--accent);
+        }
+        
+        /* Recap Grid */
+        .recap-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            margin-top: 50px;
+            max-width: 1100px;
+        }
+        
+        .recap-item {
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 28px 20px;
+            text-align: center;
+        }
+        
+        .recap-num {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+        
+        .recap-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        
+        /* Flow Diagram */
+        .flow-container {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .flow-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .flow-box {
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 24px 32px;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .flow-box.highlighted {
+            background: var(--accent-subtle);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        .flow-arrow {
+            font-size: 24px;
+            color: var(--text-muted);
+        }
+        
+        /* Keyboard hints */
+        .keyboard-hint {
+            position: fixed;
+            bottom: 30px;
+            right: 40px;
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+        
+        .key {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--text-muted);
+        }
+        
+        /* Edit Flow */
+        .edit-flow {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-top: 50px;
+        }
+        
+        .edit-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .edit-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+        
+        .edit-step.active .edit-icon {
+            background: var(--accent-subtle);
+            border-color: var(--accent);
+        }
+        
+        .edit-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .edit-arrow {
+            font-size: 24px;
+            color: var(--text-muted);
+        }
+        
+        /* Simple Visual */
+        .simple-visual {
+            margin-top: 50px;
+        }
+        
+        .browser-mockup {
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            width: 700px;
+            overflow: hidden;
+        }
+        
+        .browser-header {
+            background: var(--bg-secondary);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .browser-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .browser-dot.red { background: #ff5f57; }
+        .browser-dot.yellow { background: #febc2e; }
+        .browser-dot.green { background: #28c840; }
+        
+        .browser-url {
+            flex: 1;
+            background: var(--bg-primary);
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-left: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-family: 'SF Mono', Consolas, monospace;
+        }
+        
+        .browser-content {
+            padding: 60px;
+            text-align: center;
+            color: var(--accent);
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Chapter Navigation -->
+    <nav class="chapter-nav">
+        <div class="chapter-nav-title">Chapters</div>
+        <ul class="chapter-list" id="chapterList">
+            <!-- Populated by JavaScript -->
+        </ul>
+    </nav>
+    
+    <!-- Slide Counter -->
+    <div class="slide-counter">
+        <span class="current" id="currentSlide">1</span>/<span id="totalSlides">18</span>
+    </div>
+    
+    <!-- Keyboard Hint -->
+    <div class="keyboard-hint">
+        <div class="key">←</div>
+        <div class="key">→</div>
+    </div>
+    
+    <!-- Slides Container -->
+    <div class="slides-container">
+        
+        <!-- Slide 1: Overview -->
+        <div class="slide active" data-chapter="Overview">
+            <div class="slide-eyebrow">The Complete Method</div>
+            <div class="slide-title"><span class="accent">5</span> Steps to AI Slides</div>
+            <div class="recap-grid">
+                <div class="recap-item">
+                    <div class="recap-num">1</div>
+                    <div class="recap-label">Write Script</div>
+                </div>
+                <div class="recap-item">
+                    <div class="recap-num">2</div>
+                    <div class="recap-label">Claude Project</div>
+                </div>
+                <div class="recap-item">
+                    <div class="recap-num">3</div>
+                    <div class="recap-label">Opus 4.5</div>
+                </div>
+                <div class="recap-item">
+                    <div class="recap-num">4</div>
+                    <div class="recap-label">Quick Edits</div>
+                </div>
+                <div class="recap-item">
+                    <div class="recap-num">5</div>
+                    <div class="recap-label">Code Editor</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 2: Why Code - Comparison -->
+        <div class="slide" data-chapter="Why Code?">
+            <div class="slide-eyebrow">Important Decision</div>
+            <div class="slide-title">HTML, not <span class="accent">PowerPoint</span></div>
+            <div class="comparison-container" style="margin-top: 60px;">
+                <div class="comparison-item">
+                    <div class="comparison-icon dimmed">📊</div>
+                    <div class="comparison-label dimmed">PowerPoint</div>
+                </div>
+                <div class="vs-divider">→</div>
+                <div class="comparison-item">
+                    <div class="comparison-icon highlighted">&lt;/&gt;</div>
+                    <div class="comparison-label highlighted">HTML Code</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 4: Two Reasons -->
+        <div class="slide" data-chapter="Why Code?">
+            <div class="slide-eyebrow">Why This Works</div>
+            <div class="slide-title">Two reasons to use <span class="accent">code</span></div>
+            <div class="reasons-container">
+                <div class="reason-card">
+                    <div class="reason-number">01</div>
+                    <div class="reason-title">Truly Unique</div>
+                    <div class="reason-desc">Your slides won't look like every other PowerPoint out there.</div>
+                </div>
+                <div class="reason-card">
+                    <div class="reason-number">02</div>
+                    <div class="reason-title">AI's Superpower</div>
+                    <div class="reason-desc">Code is where AI works best. We leverage that strength.</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 5: Alternative Path -->
+        <div class="slide" data-chapter="Alternative Path">
+            <div class="slide-eyebrow">If You Need PowerPoint</div>
+            <div class="slide-title">There's another path with <span class="accent">Claude Skills</span></div>
+            <a href="https://youtu.be/DXDn4GCgqos" target="_blank" style="text-decoration: none; margin-top: 40px; display: block;">
+                <div style="
+                    width: 640px;
+                    height: 360px;
+                    border-radius: 16px;
+                    overflow: hidden;
+                    position: relative;
+                    box-shadow: 0 0 60px rgba(0, 212, 255, 0.2);
+                    cursor: pointer;
+                    transition: transform 0.3s ease, box-shadow 0.3s ease;
+                " onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 0 80px rgba(0, 212, 255, 0.4)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 60px rgba(0, 212, 255, 0.2)';">
+                    <img src="https://img.youtube.com/vi/DXDn4GCgqos/maxresdefault.jpg"
+                         alt="Claude Skills for PowerPoint"
+                         style="width: 100%; height: 100%; object-fit: cover;"
+                         onerror="this.src='https://img.youtube.com/vi/DXDn4GCgqos/hqdefault.jpg'">
+                    <div style="
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        width: 80px;
+                        height: 80px;
+                        background: rgba(0, 212, 255, 0.95);
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        box-shadow: 0 0 40px rgba(0, 212, 255, 0.5);
+                    ">
+                        <div style="
+                            width: 0;
+                            height: 0;
+                            border-left: 28px solid #050505;
+                            border-top: 16px solid transparent;
+                            border-bottom: 16px solid transparent;
+                            margin-left: 6px;
+                        "></div>
+                    </div>
+                </div>
+                <div style="color: #888; font-size: 16px; margin-top: 20px; text-align: center;">Click to watch on YouTube</div>
+            </a>
+        </div>
+        
+        <!-- Slide 6: Step 1 - Script -->
+        <div class="slide" data-chapter="Step 1: Script">
+            <div class="step-badge">
+                <span class="step-badge-number">STEP 1</span>
+                <span class="step-badge-label">Write Your Script</span>
+            </div>
+            <div class="slide-title">Write everything you want to say</div>
+            <div class="slide-subtitle">Word for word. Or at least a rough framework.</div>
+        </div>
+        
+        <!-- Slide 8: Step 2 - Claude Project -->
+        <div class="slide" data-chapter="Step 2: Claude Project">
+            <div class="step-badge">
+                <span class="step-badge-number">STEP 2</span>
+                <span class="step-badge-label">Set Up Claude Project</span>
+            </div>
+            <div class="slide-title">Create a dedicated <span class="accent">Project</span></div>
+            <div class="slide-subtitle">This helps AI give you consistent, great results every time.</div>
+        </div>
+        
+        <!-- Slide 9: System Prompt -->
+        <div class="slide" data-chapter="The System Prompt">
+            <div class="prompt-container">
+                <div class="prompt-label">SYSTEM PROMPT</div>
+                <div class="prompt-section">
+                    <p class="prompt-text">You will be creating a complete HTML presentation with CSS styling and JavaScript functionality based on YouTube video notes. The presentation should be optimized for recording, with <strong>minimal text and maximum visual impact</strong>.</p>
+                    <p class="prompt-text" style="margin-top: 12px;">Your task is to create a single HTML file that contains a complete slide presentation based on the video notes provided.</p>
+                    <p class="prompt-text" style="margin-top: 12px;">Follow these requirements carefully:</p>
+                </div>
+
+                <div class="prompt-section">
+                    <div class="prompt-section-title">Content Requirements</div>
+                    <ul class="prompt-list">
+                        <li>Skip the intro and title sections from the video notes - start with the main content</li>
+                        <li>Each slide should contain minimal text - focus on key numbers, statistics, or single important phrases</li>
+                        <li>Prioritize visual elements: diagrams, charts, icons, illustrations, or large impactful numbers</li>
+                        <li>Extract the main chapters/sections from the notes to create a logical flow of slides</li>
+                        <li>Each major point should get its own slide rather than cramming multiple points together</li>
+                    </ul>
+                </div>
+
+                <div class="prompt-section">
+                    <div class="prompt-section-title">Visual Design Requirements</div>
+                    <ul class="prompt-list">
+                        <li>Use high contrast color schemes (dark background with light text)</li>
+                        <li>Large, readable fonts for any text that appears</li>
+                        <li>Clean, minimal design with plenty of white space</li>
+                        <li>Visual hierarchy should guide the viewer's attention to what matters most</li>
+                        <li>Use CSS to create simple diagrams, charts, or visual representations where appropriate</li>
+                    </ul>
+                </div>
+
+                <div class="prompt-section">
+                    <div class="prompt-section-title">Technical Requirements</div>
+                    <ul class="prompt-list">
+                        <li>Create a single HTML file with embedded CSS and JavaScript</li>
+                        <li>Implement keyboard navigation: left/right arrow keys to navigate between slides</li>
+                        <li>Display current slide number and total slides in the top right corner (e.g., "3/12")</li>
+                        <li>Show a chapter navigation menu on the left side of the screen listing all major sections</li>
+                        <li>Highlight the current chapter in the navigation menu</li>
+                        <li>Ensure smooth transitions between slides</li>
+                        <li>Make the presentation fullscreen-friendly for recording</li>
+                    </ul>
+                </div>
+
+                <div class="prompt-section">
+                    <div class="prompt-section-title">Navigation Structure</div>
+                    <ul class="prompt-list">
+                        <li>The left sidebar should show chapter names extracted from the video notes</li>
+                        <li>Clicking on a chapter should jump to that section</li>
+                        <li>The current chapter should be visually highlighted</li>
+                        <li>Slides should be grouped logically under their respective chapters</li>
+                    </ul>
+                </div>
+
+                <div class="prompt-section">
+                    <p class="prompt-text">Before creating the HTML file, use the scratchpad below to plan your approach:</p>
+                    <div style="background: var(--bg-primary); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; margin-top: 12px;">
+                        <div style="font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 10px;">&lt;scratchpad&gt;</div>
+                        <p class="prompt-text" style="margin-bottom: 8px;">Plan out:</p>
+                        <ul class="prompt-list">
+                            <li>What are the main chapters/sections from the video notes?</li>
+                            <li>What key visual elements can you create for each major point?</li>
+                            <li>How will you structure the slide progression?</li>
+                            <li>What specific numbers, statistics, or key phrases should be highlighted?</li>
+                        </ul>
+                        <div style="font-size: 12px; font-weight: 600; color: var(--accent); margin-top: 10px;">&lt;/scratchpad&gt;</div>
+                    </div>
+                </div>
+
+                <div class="prompt-section">
+                    <p class="prompt-text">Your final output should be a complete, functional HTML file with embedded CSS and JavaScript. The file should be ready to open in a browser for recording the video presentation. Make sure the presentation flows logically and each slide serves a clear purpose in supporting the video content.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Step 5 - Code Editor -->
+        <div class="slide" data-chapter="Step 5: Code Editor">
+            <div class="step-badge">
+                <span class="step-badge-number">STEP 5</span>
+                <span class="step-badge-label">Use a Code Editor</span>
+            </div>
+            <div class="slide-title">For more edits, switch tools</div>
+            <div class="tools-container">
+                <div class="tool-card primary">
+                    <div class="tool-icon">
+                        <img src="cursor.png" alt="Cursor" style="width: 100%; height: 100%; object-fit: contain;">
+                    </div>
+                    <div class="tool-name">Cursor</div>
+                    <div class="tool-desc">Best for most people starting out. Non-tech friendly.</div>
+                    <div class="tool-tag">Recommended</div>
+                </div>
+                <div class="tool-card">
+                    <div class="tool-icon">
+                        <img src="claude_code.png" alt="Claude Code" style="width: 100%; height: 100%; object-fit: contain;">
+                    </div>
+                    <div class="tool-name">Claude Code</div>
+                    <div class="tool-desc">More adventurous option. Powerful CLI tool.</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 15: Model Selection -->
+        <div class="slide" data-chapter="Model Selection">
+            <div class="slide-eyebrow">Which Model When?</div>
+            <div class="slide-title">Match the model to the task</div>
+            <div class="tools-container" style="margin-top: 50px;">
+                <div class="tool-card primary" style="width: 360px;">
+                    <div class="tool-icon">🧠</div>
+                    <div class="tool-name">Opus 4.5</div>
+                    <div class="tool-desc">Big changes, complex redesigns, lots of changes at once.</div>
+                    <div class="tool-tag">Smartest</div>
+                </div>
+                <div class="tool-card" style="width: 360px;">
+                    <div class="tool-icon">⚡</div>
+                    <div class="tool-name">Sonnet 4.5 / Composer</div>
+                    <div class="tool-desc">Font sizes, colors, minor tweaks. Fast and cheap.</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 16: Viewing Slides -->
+        <div class="slide" data-chapter="Viewing Slides">
+            <div class="slide-eyebrow">Super Simple</div>
+            <div class="slide-title">Double-click. <span class="accent">Done.</span></div>
+            <div class="simple-visual">
+                <div class="browser-mockup">
+                    <div class="browser-header">
+                        <div class="browser-dot red"></div>
+                        <div class="browser-dot yellow"></div>
+                        <div class="browser-dot green"></div>
+                        <div class="browser-url">file:///slides.html</div>
+                    </div>
+                    <div class="browser-content">Your slides appear here ✨</div>
+                </div>
+            </div>
+            <div class="slide-subtitle" style="margin-top: 30px;">Refresh after edits. Click through to review.</div>
+        </div>
+        
+        <!-- Slide 18: Recap -->
+        <div class="slide" data-chapter="Recap">
+            <div class="slide-eyebrow">The Complete Method</div>
+            <div class="slide-title"><span class="accent">5</span> Steps to AI Slides</div>
+            <div class="recap-grid">
+                <div class="recap-item">
+                    <div class="recap-num">1</div>
+                    <div class="recap-label">Write Script</div>
+                </div>
+                <div class="recap-item">
+                    <div class="recap-num">2</div>
+                    <div class="recap-label">Claude Project</div>
+                </div>
+                <div class="recap-item">
+                    <div class="recap-num">3</div>
+                    <div class="recap-label">Opus 4.5</div>
+                </div>
+                <div class="recap-item">
+                    <div class="recap-num">4</div>
+                    <div class="recap-label">Quick Edits</div>
+                </div>
+                <div class="recap-item">
+                    <div class="recap-num">5</div>
+                    <div class="recap-label">Code Editor</div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <script>
+        // Slide and Chapter Configuration
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+        
+        // Update total slides display
+        document.getElementById('totalSlides').textContent = totalSlides;
+        
+        // Build chapter navigation
+        const chapters = [];
+        const chapterStartSlides = {};
+        
+        slides.forEach((slide, index) => {
+            const chapter = slide.dataset.chapter;
+            if (!chapters.includes(chapter)) {
+                chapters.push(chapter);
+                chapterStartSlides[chapter] = index;
+            }
+        });
+        
+        const chapterList = document.getElementById('chapterList');
+        chapters.forEach((chapter, index) => {
+            const li = document.createElement('li');
+            li.className = 'chapter-item';
+            li.innerHTML = `<span class="chapter-number">${String(index + 1).padStart(2, '0')}</span>${chapter}`;
+            li.addEventListener('click', () => goToSlide(chapterStartSlides[chapter]));
+            chapterList.appendChild(li);
+        });
+        
+        // Navigation Functions
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle('active', index === currentSlide);
+            });
+            
+            document.getElementById('currentSlide').textContent = currentSlide + 1;
+            
+            // Update chapter highlight
+            const currentChapter = slides[currentSlide].dataset.chapter;
+            document.querySelectorAll('.chapter-item').forEach((item, index) => {
+                item.classList.toggle('active', chapters[index] === currentChapter);
+            });
+        }
+        
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+        
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+        
+        function goToSlide(index) {
+            currentSlide = index;
+            updateSlide();
+        }
+        
+        // Keyboard Navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            }
+        });
+        
+        // Initialize
+        updateSlide();
+    </script>
+</body>
+</html>
